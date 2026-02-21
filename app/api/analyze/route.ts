@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeMessages(messages, context as Context);
 
     // Save scan to database
-    const { data: scan } = await supabase
+    const { data: scan, error: scanError } = await supabase
       .from('scans')
       .insert({
         user_id: user?.id || null,
@@ -88,12 +88,21 @@ export async function POST(request: NextRequest) {
         signals: analysis.signals,
         messages,
         ip_address: request.headers.get('x-forwarded-for') || null,
-        unlocked: isPro, // Auto-unlock for Pro users
+        unlocked: isPro,
       })
       .select()
       .single();
 
-    // Update user stats
+    // Check if scan failed to save
+    if (scanError || !scan) {
+      console.error('Failed to save scan:', scanError);
+      return NextResponse.json(
+        { error: 'Failed to save scan results. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    // Update user stats (only if user exists)
     if (user) {
       const { data: currentProfile } = await supabase
         .from('profiles')
@@ -113,16 +122,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate share URL
-    const shareUrl = scan?.id
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/result/${scan.id}`
-      : null;
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/result/${scan.id}`;
 
     // Return response based on user tier
     if (isPro) {
       // Pro users get full results immediately
       return NextResponse.json({
         ...analysis,
-        scanId: scan?.id,
+        scanId: scan.id,
         shareUrl,
         locked: false,
       });
@@ -130,7 +137,7 @@ export async function POST(request: NextRequest) {
       // Free users get limited preview with paywall
       return NextResponse.json({
         score: analysis.score,
-        scanId: scan?.id,
+        scanId: scan.id,
         shareUrl,
         locked: true,
         message: 'Unlock to see full results'
