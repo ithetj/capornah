@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Check if user is Pro subscriber
+    let isPro = false;
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -36,6 +38,12 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (profile) {
+        // Check if Pro
+        if (profile.tier === 'pro') {
+          isPro = true;
+        }
+
+        // Reset daily counter if new day
         const lastReset = new Date(profile.last_scan_reset);
         const now = new Date();
         
@@ -50,12 +58,14 @@ export async function POST(request: NextRequest) {
           profile.scans_today = 0;
         }
 
-        if (profile.tier === 'free' && profile.scans_today >= 3) {
+        // Check daily limit for free users
+        if (!isPro && profile.scans_today >= 3) {
           return NextResponse.json(
             {
               error: 'Daily limit reached',
               upgrade: true,
-              message: 'Free tier = 3 scans/day. Go Pro for unlimited.',
+              message: '🚨 You hit your 3 scans/day limit. Go Pro for unlimited scans!',
+              upgradeUrl: '/pricing'
             },
             { status: 429 }
           );
@@ -63,8 +73,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Analyze messages with Claude
     const analysis = await analyzeMessages(messages, context as Context);
 
+    // Save scan to database
     const { data: scan } = await supabase
       .from('scans')
       .insert({
@@ -74,12 +86,14 @@ export async function POST(request: NextRequest) {
         verdict_title: analysis.verdict.title,
         verdict_body: analysis.verdict.body,
         signals: analysis.signals,
-messages,
+        messages,
         ip_address: request.headers.get('x-forwarded-for') || null,
+        unlocked: isPro, // Auto-unlock for Pro users
       })
       .select()
       .single();
 
+    // Update user stats
     if (user) {
       const { data: currentProfile } = await supabase
         .from('profiles')
@@ -98,15 +112,31 @@ messages,
       }
     }
 
+    // Generate share URL
     const shareUrl = scan?.id
-      ? process.env.NEXT_PUBLIC_APP_URL + '/result/' + scan.id
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/result/${scan.id}`
       : null;
 
-    return NextResponse.json({
-      ...analysis,
-      scanId: scan?.id,
-      shareUrl,
-    });
+    // Return response based on user tier
+    if (isPro) {
+      // Pro users get full results immediately
+      return NextResponse.json({
+        ...analysis,
+        scanId: scan?.id,
+        shareUrl,
+        locked: false,
+      });
+    } else {
+      // Free users get limited preview with paywall
+      return NextResponse.json({
+        score: analysis.score,
+        scanId: scan?.id,
+        shareUrl,
+        locked: true,
+        message: 'Unlock to see full results'
+      });
+    }
+
   } catch (error: any) {
     console.error('Analysis error:', error);
     return NextResponse.json(
