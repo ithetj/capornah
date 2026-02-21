@@ -75,59 +75,61 @@ export default function ImageUpload({ onTextExtracted }: ImageUploadProps) {
 
   return (
     <div className="space-y-4">
-      <GlassCard
-        className="relative p-8 cursor-pointer hover:border-pink-500/50 transition"
+      <div
         onDrop={handleDrop}
         onDragOver={(e: React.DragEvent) => e.preventDefault()}
+        className="relative"
       >
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={uploading}
-        />
+        <GlassCard className="p-8 cursor-pointer hover:border-pink-500/50 transition">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            disabled={uploading}
+          />
 
-        {!uploading && !preview && (
-          <div className="text-center space-y-3">
-            <div className="text-5xl">📸</div>
-            <div className="text-white font-bold text-lg">Drop screenshot here</div>
-            <div className="text-white/50 text-sm">
-              or click to browse • paste with Cmd/Ctrl+V
+          {!uploading && !preview && (
+            <div className="text-center space-y-3">
+              <div className="text-5xl">📸</div>
+              <div className="text-white font-bold text-lg">Drop screenshot here</div>
+              <div className="text-white/50 text-sm">
+                or click to browse • paste with Cmd/Ctrl+V
+              </div>
+              <div className="text-xs text-white/40">
+                Works with iMessage, WhatsApp, Instagram DMs
+              </div>
             </div>
-            <div className="text-xs text-white/40">
-              Works with iMessage, WhatsApp, Instagram DMs
-            </div>
-          </div>
-        )}
+          )}
 
-        {preview && !uploading && (
-          <div className="space-y-3 text-center">
-            <img
-              src={preview}
-              alt="Preview"
-              className="max-h-40 mx-auto rounded-lg border border-white/20"
-            />
-            <div className="text-sm text-white/60">Processing image...</div>
-          </div>
-        )}
-
-        {uploading && (
-          <div className="space-y-4 text-center">
-            <div className="text-4xl">🔍</div>
-            <div className="text-white font-bold">Extracting text...</div>
-            <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-pink-500 to-purple-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3 }}
+          {preview && !uploading && (
+            <div className="space-y-3 text-center">
+              <img
+                src={preview}
+                alt="Preview"
+                className="max-h-40 mx-auto rounded-lg border border-white/20"
               />
+              <div className="text-sm text-white/60">Processing image...</div>
             </div>
-            <div className="text-sm text-white/60">{progress}%</div>
-          </div>
-        )}
-      </GlassCard>
+          )}
+
+          {uploading && (
+            <div className="space-y-4 text-center">
+              <div className="text-4xl">🔍</div>
+              <div className="text-white font-bold">Extracting text...</div>
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-pink-500 to-purple-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              <div className="text-sm text-white/60">{progress}%</div>
+            </div>
+          )}
+        </GlassCard>
+      </div>
 
       <div
         onPaste={handlePaste}
