@@ -1,38 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ScanForm from '@/components/ScanForm';
 import ScanAnimation from '@/components/ScanAnimation';
-import ResultCard from '@/components/ResultCard';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const router = useRouter();
 
-  console.log('🏠 Home render:', { loading, hasResult: !!result });
+  const handleScanComplete = (data: any) => {
+    console.log('✅ Received result:', data);
+    
+    // Stop loading
+    setLoading(false);
+    
+    // Check if we have a scanId
+    if (!data.scanId) {
+      console.error('No scanId in response:', data);
+      alert('Error: Failed to save scan. Please try again.');
+      return;
+    }
+
+    // Redirect based on locked status
+    if (data.locked) {
+      // Free user - show paywall
+      console.log('Redirecting to paywall...');
+      router.push(`/result/${data.scanId}`);
+    } else {
+      // Pro user - show full results
+      console.log('Redirecting to full results...');
+      router.push(`/result/${data.scanId}?unlocked=true`);
+    }
+  };
 
   if (loading) {
     return <ScanAnimation />;
   }
 
-  if (result) {
-    return <ResultCard result={result} />;
-  }
-
   return (
     <ScanForm 
-      onScanComplete={(data) => {
-        console.log('✅ Received result:', data);
-        setLoading(false); // Make sure loading is false
-        setResult(data);
-      }} 
-      onLoading={(isLoading) => {
-        console.log('⏳ Loading state:', isLoading);
-        setLoading(isLoading);
-        if (!isLoading) {
-          // Don't clear result when loading stops
-        }
-      }} 
+      onScanComplete={handleScanComplete} 
+      onLoading={setLoading} 
     />
   );
 }
