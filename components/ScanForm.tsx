@@ -86,31 +86,46 @@ export default function ScanForm({ onScanComplete, onLoading }: ScanFormProps) {
   const handleScan = async () => {
     setError('');
     const validMessages = messages.filter((m) => m.trim().length > 0);
+    
     if (validMessages.length === 0) {
       setError('Add at least one message 🙏');
       return;
     }
-
+  
     onLoading(true);
+    
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: validMessages, context }),
       });
-
+  
       const data = await response.json();
+      
       if (!response.ok) {
         setError(data.message || data.error || 'Something went wrong');
         onLoading(false);
+        
+        // Handle upgrade prompt
+        if (data.upgrade) {
+          const shouldUpgrade = confirm(data.message + '\n\nGo to pricing page?');
+          if (shouldUpgrade) {
+            window.location.href = '/pricing';
+          }
+        }
         return;
       }
-
+  
+      // Important: Stop loading and pass data to parent immediately
+      // Don't try to access any properties here
       onLoading(false);
-      setTimeout(() => {
-        onScanComplete(data);
-      }, 100);
-    } catch {
+      
+      // Just pass the raw data to the parent component
+      onScanComplete(data);
+      
+    } catch (err) {
+      console.error('Scan error:', err);
       setError('Failed to analyze. Try again.');
       onLoading(false);
     }
