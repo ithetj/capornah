@@ -1,31 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import ScanForm from '@/components/ScanForm';
 import ScanAnimation from '@/components/ScanAnimation';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleScanComplete = (data: any) => {
     console.log('✅ Received result:', data);
     
-    // If results are locked (paywall), redirect to result page
-    if (data.locked && data.scanId) {
-      router.push(`/result/${data.scanId}`);
+    // Stop loading
+    setLoading(false);
+    
+    // Check if we have a scanId
+    if (!data.scanId) {
+      console.error('No scanId in response:', data);
+      alert('Error: Failed to save scan. Please try again.');
       return;
     }
 
-    // If results are unlocked (Pro user or full data), redirect with full results
-    if (data.scanId) {
-      router.push(`/result/${data.scanId}?unlocked=true`);
-      return;
+    // Redirect based on locked status
+    if (data.locked) {
+      // Free user - show paywall
+      console.log('Redirecting to paywall...');
+      window.location.href = `/result/${data.scanId}`;
+    } else {
+      // Pro user - show full results
+      console.log('Redirecting to full results...');
+      window.location.href = `/result/${data.scanId}?unlocked=true`;
     }
-
-    // Fallback: if no scanId, something went wrong
-    console.error('No scanId in response:', data);
   };
 
   if (loading) {
