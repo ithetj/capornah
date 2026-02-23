@@ -1,45 +1,109 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import ResultCard from '@/components/ResultCard';
+import BlurredResult from '@/components/BlurredResult';
+import { notFound } from 'next/navigation';
 
-import { useState } from 'react';
-import ScanForm from '@/components/ScanForm';
-import ScanAnimation from '@/components/ScanAnimation';
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const supabase = await createClient();
+  const { data: scan } = await supabase
+    .from('scans')
+    .select('*')
+    .eq('id', params.id)
+    .single();
 
-export default function Home() {
-  const [loading, setLoading] = useState(false);
-
-  const handleScanComplete = (data: any) => {
-    console.log('✅ Received result:', data);
-    
-    // Stop loading
-    setLoading(false);
-    
-    // Check if we have a scanId
-    if (!data.scanId) {
-      console.error('No scanId in response:', data);
-      alert('Error: Failed to save scan. Please try again.');
-      return;
-    }
-
-    // Redirect based on locked status
-    if (data.locked) {
-      // Free user - show paywall
-      console.log('Redirecting to paywall...');
-      window.location.href = `/result/${data.scanId}`;
-    } else {
-      // Pro user - show full results
-      console.log('Redirecting to full results...');
-      window.location.href = `/result/${data.scanId}?unlocked=true`;
-    }
-  };
-
-  if (loading) {
-    return <ScanAnimation />;
+  if (!scan) {
+    return { title: 'CAPORNAH' };
   }
 
-  return (
-    <ScanForm 
-      onScanComplete={handleScanComplete} 
-      onLoading={setLoading} 
-    />
-  );
+  const ogUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/og?score=${scan.score}&title=${encodeURIComponent(scan.verdict_title)}`;
+
+  return {
+    title: `${scan.verdict_title} - CAPORNAH`,
+    description: `Cap Level: ${scan.score}/100`,
+    openGraph: {
+      title: scan.verdict_title,
+      description: `Cap Level: ${scan.score}/100`,
+      images: [ogUrl],
+    },
+  };
+}
+
+export default async function ResultPage({ 
+  params, 
+  searchParams 
+}: { 
+  params: { id: string }
+  searchParams: { success?: string, unlocked?: string } 
+}) {
+  const supabase = await createClient();
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Get scan
+  const { data: scan } = await supabase
+    .from('scans')
+    .select('*')
+    .eq('id', params.id)
+    .single();
+
+  if (!scan) {
+    notFound();
+  }
+
+  // Determine if user has access to full results
+  let hasAccess = false;
+
+  if (user) {
+    // Check if user is Pro subscriber
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.tier === 'pro') {
+      hasAccess = true;
+    }
+
+    // Check if user just completed payment
+    if (searchParams.success === 'true') {
+      // Mark scan as unlocked
+      await supabase
+        .from('scans')
+        .update({ unlocked: true, unlocked_at: new Date().toISOString() })
+        .eq('id', params.id);
+      
+      hasAccess = true;
+    }
+
+    // Check if scan was already unlocked
+    if (scan.unlocked) {
+      hasAccess = true;
+    }
+
+    // Check if explicitly unlocked (Pro user just scanned)
+    if (searchParams.unlocked === 'true') {
+      hasAccess = true;
+    }
+  }
+
+  const result = {
+    score: scan.score,
+    signals: scan.signals,
+    verdict: {
+      title: scan.verdict_title,
+      body: scan.verdict_body,
+    },
+    shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/result/${scan.id}`,
+    scanId: scan.id,
+  };
+
+  // Show full results if user has access
+  if (hasAccess) {
+    return <ResultCard result={result} />;
+  }
+
+  // Show blurred paywall for everyone else
+  return <BlurredResult score={scan.score} scanId={scan.id} onUnlock={() => {}} />;
 }
