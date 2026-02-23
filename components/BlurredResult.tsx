@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Button } from '@/components/ui/button';
-import { Chip } from '@/components/ui/chip';
+import AuthModal from './AuthModal';
+import { createClient } from '@/lib/supabase/client';
 
 interface BlurredResultProps {
   score: number;
@@ -14,8 +15,25 @@ interface BlurredResultProps {
 export default function BlurredResult({ score, scanId }: BlurredResultProps) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'onetime'>('onetime');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    }
+    checkAuth();
+  }, []);
 
   const handleCheckout = async () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch('/api/checkout', {
@@ -241,6 +259,18 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
           </div>
         </div>
       </motion.div>
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={() => {
+            setShowAuthModal(false);
+            setIsAuthenticated(true);
+            handleCheckout();
+          }}
+        />
+      )}
     </div>
   );
 }
