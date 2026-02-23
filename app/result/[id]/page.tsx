@@ -114,5 +114,5 @@ export default async function ResultPage({
   }
 
   // Show blurred paywall for everyone else
-  return <BlurredResult score={scan.score} scanId={scan.id} onUnlock={() => {}} />;
+  return <BlurredResult score={scan.score} scanId={scan.id} />;
 }

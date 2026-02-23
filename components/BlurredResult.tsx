@@ -9,10 +9,9 @@ import { Chip } from '@/components/ui/chip';
 interface BlurredResultProps {
   score: number;
   scanId: string;
-  onUnlock: () => void;
 }
 
-export default function BlurredResult({ score, scanId, onUnlock }: BlurredResultProps) {
+export default function BlurredResult({ score, scanId }: BlurredResultProps) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'onetime'>('onetime');
 
