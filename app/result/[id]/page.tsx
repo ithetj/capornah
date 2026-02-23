@@ -3,12 +3,18 @@ import ResultCard from '@/components/ResultCard';
 import BlurredResult from '@/components/BlurredResult';
 import { notFound } from 'next/navigation';
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const resolvedParams = await params;
   const supabase = await createClient();
+  
   const { data: scan } = await supabase
     .from('scans')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', resolvedParams.id)
     .single();
 
   if (!scan) {
@@ -32,22 +38,25 @@ export default async function ResultPage({
   params, 
   searchParams 
 }: { 
-  params: { id: string }
-  searchParams: { success?: string, unlocked?: string } 
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ success?: string, unlocked?: string }> 
 }) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  
   const supabase = await createClient();
   
   // Get current user
   const { data: { user } } = await supabase.auth.getUser();
 
   // Get scan
-  const { data: scan } = await supabase
+  const { data: scan, error } = await supabase
     .from('scans')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', resolvedParams.id)
     .single();
 
-  if (!scan) {
+  if (!scan || error) {
     notFound();
   }
 
@@ -67,12 +76,12 @@ export default async function ResultPage({
     }
 
     // Check if user just completed payment
-    if (searchParams.success === 'true') {
+    if (resolvedSearchParams.success === 'true') {
       // Mark scan as unlocked
       await supabase
         .from('scans')
         .update({ unlocked: true, unlocked_at: new Date().toISOString() })
-        .eq('id', params.id);
+        .eq('id', resolvedParams.id);
       
       hasAccess = true;
     }
@@ -83,7 +92,7 @@ export default async function ResultPage({
     }
 
     // Check if explicitly unlocked (Pro user just scanned)
-    if (searchParams.unlocked === 'true') {
+    if (resolvedSearchParams.unlocked === 'true') {
       hasAccess = true;
     }
   }
