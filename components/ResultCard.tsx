@@ -160,22 +160,22 @@ export default function ResultCard({ result }: ResultCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
-          >
-            🔍 Scan Again
-          </button>
-          {shareUrl && (
-            <button
-              onClick={handleShare}
-              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-pink-500/50"
-            >
-              📤 Share Results
-            </button>
-          )}
-        </div>
+<div className="grid grid-cols-2 gap-4">
+  <button
+    onClick={() => window.location.href = '/'}
+    className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
+  >
+    🔍 Scan Again
+  </button>
+  {shareUrl && (
+    <button
+      onClick={handleShare}
+      className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-pink-500/50"
+    >
+      📤 Share Results
+    </button>
+  )}
+</div>
 
         {/* Disclaimer */}
         <p className="text-center text-xs text-gray-600 mt-6">
