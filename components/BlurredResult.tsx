@@ -130,12 +130,16 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
         {/* Pricing Options */}
         <GlassCard className="p-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-black mb-2">
+            {/* Psychological headline */}
+            <h2 className="text-3xl font-black mb-3">
               <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                Unlock Full Results
+                You felt it. Now confirm it.
               </span>
             </h2>
-            <p className="text-white/60">Choose your plan to see the complete analysis</p>
+            <p className="text-xl text-white/90 font-bold mb-2">
+              Unlock the proof you need
+            </p>
+            <p className="text-white/60">Full analysis + all detected patterns</p>
           </div>
 
           {/* Plan Selector */}
@@ -225,24 +229,24 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
             </button>
           </div>
 
-          {/* CTA */}
+          {/* CTA Button */}
           <Button
             variant="primary"
             onClick={handleCheckout}
             disabled={loading}
-            className="w-full py-5 text-lg"
+            className="w-full py-5 text-lg font-bold"
           >
             {loading ? (
               'Loading...'
             ) : selectedPlan === 'onetime' ? (
-              <>🔓 Unlock for $4.99</>
+              <>🔓 Get The Truth — $4.99</>
             ) : (
-              <>🚀 Subscribe for $9.99/mo</>
+              <>🚀 Never Miss It Again — $9.99/mo</>
             )}
           </Button>
 
           <p className="text-center text-white/40 text-xs mt-4">
-            Secure checkout powered by Stripe
+            Secure checkout • Instant access • 30-day guarantee
           </p>
         </GlassCard>
 
