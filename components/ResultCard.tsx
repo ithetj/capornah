@@ -41,22 +41,33 @@ export default function ResultCard({ result }: ResultCardProps) {
     }
   };
 
+  
   const handleDownloadImage = async () => {
     if (!resultRef.current) return;
     
     setDownloading(true);
     
     try {
-      // Wait a bit for any animations to complete
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Scroll to top to ensure everything is in view
+      window.scrollTo(0, 0);
+      
+      // Wait longer for animations and content to fully render
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const canvas = await html2canvas(resultRef.current, {
         backgroundColor: '#000000',
         scale: 2, // Higher quality
         logging: false,
         useCORS: true,
+        allowTaint: true,
+        windowWidth: resultRef.current.scrollWidth,
+        windowHeight: resultRef.current.scrollHeight,
+        width: resultRef.current.scrollWidth,
+        height: resultRef.current.scrollHeight,
+        scrollY: -window.scrollY,
+        scrollX: -window.scrollX,
       });
-
+  
       // Convert to blob and download
       canvas.toBlob((blob) => {
         if (blob) {
@@ -226,10 +237,18 @@ export default function ResultCard({ result }: ResultCardProps) {
           )}
         </div>
 
-        {/* Disclaimer */}
-        <p className="text-center text-xs text-gray-600 mt-6">
-          🎭 Entertainment only. Not actual lie detection.
-        </p>
+       {/* Disclaimer & Watermark for screenshots */}
+<div className="text-center mt-6 space-y-2">
+  <div className="text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+    CAPORNAH
+  </div>
+  <p className="text-xs text-gray-600">
+    🎭 Entertainment only. Not actual lie detection.
+  </p>
+  <p className="text-xs text-gray-500">
+    capornah.com
+  </p>
+</div>
       </motion.div>
     </div>
   );
