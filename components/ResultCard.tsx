@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AnalysisResult } from '@/types';
+import html2canvas from 'html2canvas';
 
 interface ResultCardProps {
   result: AnalysisResult & { scanId?: string; shareUrl?: string };
@@ -9,6 +11,8 @@ interface ResultCardProps {
 
 export default function ResultCard({ result }: ResultCardProps) {
   const { score, signals, verdict, shareUrl } = result;
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const getScoreColor = (score: number) => {
     if (score >= 70) return 'from-red-500 to-orange-500';
@@ -37,9 +41,45 @@ export default function ResultCard({ result }: ResultCardProps) {
     }
   };
 
+  const handleDownloadImage = async () => {
+    if (!resultRef.current) return;
+    
+    setDownloading(true);
+    
+    try {
+      // Wait a bit for any animations to complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const canvas = await html2canvas(resultRef.current, {
+        backgroundColor: '#000000',
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true,
+      });
+
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = `capornah-scan-${score}.png`;
+          link.href = url;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+        setDownloading(false);
+      });
+    } catch (error) {
+      console.error('Failed to download image:', error);
+      alert('Failed to download image. Please try again.');
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-black via-gray-900 to-black">
       <motion.div
+        ref={resultRef}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
@@ -160,22 +200,31 @@ export default function ResultCard({ result }: ResultCardProps) {
         </div>
 
         {/* Action Buttons */}
-<div className="grid grid-cols-2 gap-4">
-  <button
-    onClick={() => window.location.href = '/'}
-    className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
-  >
-    🔍 Scan Again
-  </button>
-  {shareUrl && (
-    <button
-      onClick={handleShare}
-      className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-pink-500/50"
-    >
-      📤 Share Results
-    </button>
-  )}
-</div>
+        <div className="grid grid-cols-3 gap-4">
+          <button
+            onClick={() => window.location.href = '/'}
+            className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
+          >
+            🔍 Scan Again
+          </button>
+          
+          <button
+            onClick={handleDownloadImage}
+            disabled={downloading}
+            className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/50 disabled:opacity-50"
+          >
+            {downloading ? '⏳ Saving...' : '💾 Save'}
+          </button>
+          
+          {shareUrl && (
+            <button
+              onClick={handleShare}
+              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-pink-500/50"
+            >
+              📤 Share
+            </button>
+          )}
+        </div>
 
         {/* Disclaimer */}
         <p className="text-center text-xs text-gray-600 mt-6">
