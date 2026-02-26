@@ -52,7 +52,7 @@ export default function ResultCard({ result }: ResultCardProps) {
       window.scrollTo(0, 0);
       
       // Wait longer for animations and content to fully render
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const canvas = await html2canvas(resultRef.current, {
         backgroundColor: '#000000',
