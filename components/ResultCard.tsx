@@ -48,27 +48,45 @@ export default function ResultCard({ result }: ResultCardProps) {
     setDownloading(true);
     
     try {
-      // Scroll to top to ensure everything is in view
+      // Import dynamically to avoid SSR issues
+      const html2canvas = (await import('html2canvas')).default;
+      
+      // Scroll to top
       window.scrollTo(0, 0);
       
-      // Wait longer for animations and content to fully render
+      // Wait for everything to render
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const canvas = await html2canvas(resultRef.current, {
+      // Clone the element to modify it for screenshot
+      const clone = resultRef.current.cloneNode(true) as HTMLElement;
+      
+      // Fix gradient text by converting to solid color
+      const gradientTexts = clone.querySelectorAll('.bg-clip-text');
+      gradientTexts.forEach((el) => {
+        (el as HTMLElement).style.backgroundClip = 'unset';
+        (el as HTMLElement).style.webkitBackgroundClip = 'unset';
+        (el as HTMLElement).style.webkitTextFillColor = 'unset';
+        (el as HTMLElement).style.color = '#ec4899'; // Pink color
+        el.classList.remove('text-transparent', 'bg-clip-text');
+      });
+      
+      // Append clone temporarily (hidden)
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      document.body.appendChild(clone);
+      
+      // Capture the clone
+      const canvas = await html2canvas(clone, {
         backgroundColor: '#000000',
-        scale: 2, // Higher quality
+        scale: 2,
         logging: false,
         useCORS: true,
-        allowTaint: true,
-        windowWidth: resultRef.current.scrollWidth,
-        windowHeight: resultRef.current.scrollHeight,
-        width: resultRef.current.scrollWidth,
-        height: resultRef.current.scrollHeight,
-        scrollY: -window.scrollY,
-        scrollX: -window.scrollX,
       });
+      
+      // Remove clone
+      document.body.removeChild(clone);
   
-      // Convert to blob and download
+      // Download
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
@@ -79,7 +97,8 @@ export default function ResultCard({ result }: ResultCardProps) {
           URL.revokeObjectURL(url);
         }
         setDownloading(false);
-      });
+      }, 'image/png', 1.0);
+      
     } catch (error) {
       console.error('Failed to download image:', error);
       alert('Failed to download image. Please try again.');
