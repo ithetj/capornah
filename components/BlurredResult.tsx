@@ -111,6 +111,80 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
           </div>
         </GlassCard>
 
+        {/* PATTERN TEASER - PSYCHOLOGICAL HOOK */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <GlassCard className={`p-6 border-2 ${
+            score >= 70 ? 'border-red-500/30 bg-gradient-to-br from-red-500/5 to-orange-500/5' :
+            score >= 50 ? 'border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5' :
+            'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 to-green-500/5'
+          }`}>
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">
+                {score >= 70 ? '🚨' : score >= 50 ? '👀' : '⚠️'}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-lg mb-2">
+                  {score >= 70 ? (
+                    <>We found <span className="text-red-400">major red flags</span></>
+                  ) : score >= 50 ? (
+                    <>We detected <span className="text-orange-400">suspicious patterns</span></>
+                  ) : (
+                    <>We noticed <span className="text-yellow-400">some inconsistencies</span></>
+                  )}
+                </h3>
+                
+                <p className="text-white/70 text-sm mb-4">
+                  {score >= 70 ? (
+                    "Including gaslighting tactics, major contradictions, and evasive behavior"
+                  ) : score >= 50 ? (
+                    "Including deflection tactics, story inconsistencies, and defensive responses"
+                  ) : (
+                    "Including vague answers, minor contradictions, and hesitation patterns"
+                  )}
+                </p>
+
+                {/* Impact Warning */}
+                <div className="flex items-center gap-2 p-4 bg-black/40 rounded-xl border border-white/10 mb-4">
+                  <span className="text-3xl">
+                    {score >= 70 ? '🔥' : score >= 50 ? '⚡' : '💡'}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-sm mb-1">
+                      {score >= 70 ? "Critical Trust Issues Detected" :
+                       score >= 50 ? "Trust Impact Assessment" :
+                       "Behavior Analysis Available"}
+                    </p>
+                    <p className="text-white/70 text-xs">
+                      {score >= 70 ? (
+                        <><span className="text-red-400 font-bold">Multiple high-risk patterns</span> that could damage trust</>
+                      ) : score >= 50 ? (
+                        <><span className="text-orange-400 font-bold">2-3 patterns</span> could impact trust long-term</>
+                      ) : (
+                        <><span className="text-yellow-400 font-bold">Minor patterns</span> worth being aware of</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Urgency Message */}
+                <div className="text-center p-3 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-lg border border-pink-500/20">
+                  <p className="text-white/90 text-sm font-medium">
+                    {score >= 70 ? (
+                      <>🔓 <span className="text-pink-400 font-bold">See the full breakdown</span> — you need to know this</>
+                    ) : (
+                      <>🔓 <span className="text-pink-400 font-bold">Unlock the details</span> to know what you're dealing with</>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+
         {/* Blurred Preview */}
         <div className="relative">
           <GlassCard className="p-8 blur-sm select-none pointer-events-none">
@@ -147,16 +221,23 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
         {/* Pricing Options */}
         <GlassCard className="p-8">
           <div className="text-center mb-6">
-            {/* Psychological headline */}
+            {/* Dynamic psychological headline */}
             <h2 className="text-3xl font-black mb-3">
               <span className="text-pink-500">
-                You felt it. Now confirm it.
+                {score >= 70 ? "You already know. Now see the proof." :
+                 score >= 50 ? "You felt it. Now confirm it." :
+                 "Get the full picture."}
               </span>
             </h2>
             <p className="text-xl text-white/90 font-bold mb-2">
-              Unlock the proof you need
+              {score >= 70 ? "Don't ignore the red flags" :
+               score >= 50 ? "Unlock the proof you need" :
+               "See what you might've missed"}
             </p>
-            <p className="text-white/60">Full analysis + all detected patterns</p>
+            <p className="text-white/60">
+              {score >= 70 ? "Full breakdown + high-risk pattern analysis" :
+               "Full analysis + all detected patterns"}
+            </p>
           </div>
 
           {/* Plan Selector */}
