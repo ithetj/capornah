@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AnalysisResult } from '@/types';
+import { getCapTier, getPointsToNextTier } from '@/lib/capTiers';
 import html2canvas from 'html2canvas';
 
 interface ResultCardProps {
@@ -14,24 +15,17 @@ export default function ResultCard({ result }: ResultCardProps) {
   const resultRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return 'from-red-500 to-orange-500';
-    if (score >= 40) return 'from-yellow-500 to-orange-500';
-    return 'from-green-500 to-emerald-500';
-  };
-
-  const getScoreLabel = (score: number) => {
-    if (score >= 70) return 'HIGH CAP ALERT';
-    if (score >= 40) return 'MID VIBES';
-    return 'TRUTH DETECTED';
-  };
+  const tier = getCapTier(score);
+  const pointsToNext = getPointsToNextTier(score);
+  const highRiskPatterns = signals.filter(s => s.severity === 'high').length;
+  const totalPatterns = signals.length;
 
   const handleShare = async () => {
     if (shareUrl) {
       if (navigator.share) {
         await navigator.share({
-          title: verdict.title,
-          text: `Cap Level: ${score}/100 - ${verdict.title}`,
+          title: `${tier.label} ${tier.emoji} - ${score}/100`,
+          text: `Cap Level: ${score}/100 - ${tier.label}`,
           url: shareUrl,
         });
       } else {
@@ -41,57 +35,28 @@ export default function ResultCard({ result }: ResultCardProps) {
     }
   };
 
-  
   const handleDownloadImage = async () => {
     if (!resultRef.current) return;
     
     setDownloading(true);
     
     try {
-      // Import dynamically to avoid SSR issues
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const html2canvas = (await import('html2canvas')).default;
       
-      // Scroll to top
-      window.scrollTo(0, 0);
-      
-      // Wait for everything to render
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Clone the element to modify it for screenshot
-      const clone = resultRef.current.cloneNode(true) as HTMLElement;
-      
-      // Fix gradient text by converting to solid color
-      const gradientTexts = clone.querySelectorAll('.bg-clip-text');
-      gradientTexts.forEach((el) => {
-        (el as HTMLElement).style.backgroundClip = 'unset';
-        (el as HTMLElement).style.webkitBackgroundClip = 'unset';
-        (el as HTMLElement).style.webkitTextFillColor = 'unset';
-        (el as HTMLElement).style.color = '#ec4899'; // Pink color
-        el.classList.remove('text-transparent', 'bg-clip-text');
-      });
-      
-      // Append clone temporarily (hidden)
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px';
-      document.body.appendChild(clone);
-      
-      // Capture the clone
-      const canvas = await html2canvas(clone, {
+      const canvas = await html2canvas(resultRef.current, {
         backgroundColor: '#000000',
         scale: 2,
         logging: false,
         useCORS: true,
       });
-      
-      // Remove clone
-      document.body.removeChild(clone);
-  
-      // Download
+
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
-          link.download = `capornah-scan-${score}.png`;
+          link.download = `capornah-${score}.png`;
           link.href = url;
           link.click();
           URL.revokeObjectURL(url);
@@ -117,8 +82,9 @@ export default function ResultCard({ result }: ResultCardProps) {
       >
         {/* Score Hero Section */}
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 blur-3xl" />
+          <div className={`absolute inset-0 bg-gradient-to-r ${tier.bgGradient} blur-3xl`} />
           <div className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-3xl p-8 text-center">
+            
             {/* Score Circle */}
             <motion.div
               initial={{ scale: 0 }}
@@ -126,7 +92,7 @@ export default function ResultCard({ result }: ResultCardProps) {
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="inline-block mb-6"
             >
-              <div className={`relative w-40 h-40 mx-auto`}>
+              <div className="relative w-40 h-40 mx-auto">
                 <svg className="w-full h-full transform -rotate-90">
                   <circle
                     cx="80"
@@ -173,15 +139,39 @@ export default function ResultCard({ result }: ResultCardProps) {
               </div>
             </motion.div>
 
-            {/* Score Label */}
-            <div className={`inline-block px-6 py-2 rounded-full bg-gradient-to-r ${getScoreColor(score)} text-white font-bold text-sm mb-4`}>
-              {getScoreLabel(score)}
+            {/* Cap Tier Badge */}
+            <div className={`inline-block px-6 py-2 rounded-full bg-gradient-to-r ${tier.color} text-white font-bold text-sm mb-2`}>
+              {tier.tag}
             </div>
 
-            {/* Verdict Title */}
-            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-4">
-              {verdict.title}
+            {/* Cap Tier Label */}
+            <h1 className="text-4xl md:text-5xl font-black text-pink-500 mb-2">
+              {tier.label} {tier.emoji}
             </h1>
+
+            {/* Official Branding */}
+            <p className="text-gray-500 text-sm font-medium mb-4">
+              Cap Scale™ Rating
+            </p>
+
+            {/* Distance to Next Tier */}
+            {pointsToNext !== null && (
+              <p className="text-gray-400 text-sm">
+                <span className="text-orange-400 font-bold">{pointsToNext} points</span> away from {getCapTier(score + pointsToNext + 1)?.label} {getCapTier(score + pointsToNext + 1)?.emoji}
+              </p>
+            )}
+
+            {/* Pattern Summary */}
+            <div className="mt-6 inline-block bg-white/5 border border-white/10 rounded-xl px-6 py-3">
+              <p className="text-white/90 text-sm">
+                👀 We found <span className="font-bold text-pink-400">{totalPatterns}</span> behavior pattern{totalPatterns !== 1 ? 's' : ''}
+                {highRiskPatterns > 0 && (
+                  <>
+                    {' '} — <span className="font-bold text-red-400">{highRiskPatterns}</span> could impact trust long term
+                  </>
+                )}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -209,16 +199,27 @@ export default function ResultCard({ result }: ResultCardProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.1 }}
-                className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-xl p-5 hover:border-pink-500/50 transition-all group"
+                className={`bg-gradient-to-br from-gray-900 to-black border rounded-xl p-5 hover:border-pink-500/50 transition-all group ${
+                  signal.severity === 'high' ? 'border-red-500/50' :
+                  signal.severity === 'medium' ? 'border-orange-500/50' :
+                  'border-gray-800'
+                }`}
               >
                 <div className="flex items-start gap-4">
                   <div className="text-4xl group-hover:scale-110 transition-transform">
                     {signal.emoji}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-white text-lg mb-1 group-hover:text-pink-400 transition-colors">
-                      {signal.title}
-                    </h4>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-bold text-white text-lg group-hover:text-pink-400 transition-colors">
+                        {signal.title}
+                      </h4>
+                      {signal.severity === 'high' && (
+                        <span className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full font-bold">
+                          HIGH RISK
+                        </span>
+                      )}
+                    </div>
                     <p className="text-gray-400 text-sm leading-relaxed">
                       {signal.description}
                     </p>
@@ -230,7 +231,7 @@ export default function ResultCard({ result }: ResultCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           <button
             onClick={() => window.location.href = '/'}
             className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
@@ -256,18 +257,20 @@ export default function ResultCard({ result }: ResultCardProps) {
           )}
         </div>
 
-       {/* Disclaimer & Watermark for screenshots */}
-<div className="text-center mt-6 space-y-2">
-  <div className="text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-    CAPORNAH
-  </div>
-  <p className="text-xs text-gray-600">
-    🎭 Entertainment only. Not actual lie detection.
-  </p>
-  <p className="text-xs text-gray-500">
-    capornah.com
-  </p>
-</div>
+        {/* Watermark */}
+        <div className="text-center mb-4">
+          <div className="text-2xl font-black text-pink-500 mb-1">
+            {tier.label} {tier.emoji}
+          </div>
+          <div className="text-sm font-bold text-white/60">
+            CAPORNAH.COM
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <p className="text-center text-xs text-gray-600">
+          🎭 Entertainment only. Not actual lie detection.
+        </p>
       </motion.div>
     </div>
   );

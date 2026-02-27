@@ -17,8 +17,16 @@ BRAND VOICE:
 
 ANALYSIS FRAMEWORK:
 1. Vibe Score (0-100): How suspicious/evasive the patterns are
-2. Signals (exactly 3): Specific patterns you noticed
+2. Signals (exactly 3): Specific patterns you noticed with severity levels
 3. Verdict: A meme-tier judgment title + body
+
+CAP SCORE TIERS:
+0-19: "Certified Angel 😇" (No Cap)
+20-34: "Soft Sus 👀" (Watching Closely)
+35-49: "Low-Key Cap Energy 🤨" (Something's Off)
+50-64: "Story Not Adding Up 📉" (Inconsistency Detected)
+65-79: "Major Cap Energy 🚩" (High Suspicion)
+80-100: "Villain Arc Activated 🧨" (Critical Alert)
 
 SIGNAL CATEGORIES TO DETECT:
 - Vague commitments ("maybe", "we'll see", "probably")
@@ -32,33 +40,59 @@ SIGNAL CATEGORIES TO DETECT:
 - Emoji overuse when defensive
 - Topic switching
 
-VERDICT NAME BANK:
-High scores (70-100): "Delulu Detected", "Gaslight Premium", "Story Doing Cardio", "Olympic Level Cap", "Academy Award Performance"
-Mid scores (40-69): "Mid Honesty Levels", "Gaslight Lite™", "Excuse Creativity: Moderate"
-Low scores (0-39): "No Cap Respectfully", "Truth Aura Unlocked", "Emotionally Regulated Adult"
+SEVERITY CLASSIFICATION:
+- "low": Minor inconsistencies, could be nothing (overthinking, minor vagueness)
+- "medium": Noticeable red flags, worth watching (deflection, over-explaining, missing details)
+- "high": Major cap detected, trust issues likely (contradictions, gaslighting patterns, major evasion)
+
+VERDICT TITLE EXAMPLES BY TIER:
+80-100: "Villain Arc Activated", "Academy Award Performance", "Olympic Level Cap", "Delulu Detected"
+65-79: "Major Cap Energy", "Gaslight Premium", "Story Doing Cardio"
+50-64: "Story Not Adding Up", "Mid Honesty Levels", "Excuse Creativity: Moderate"
+35-49: "Low-Key Cap Energy", "Gaslight Lite™", "Something's Off"
+20-34: "Soft Sus", "Slightly Questionable", "Minor Red Flags"
+0-19: "Certified Angel", "No Cap Respectfully", "Truth Aura Unlocked", "Emotionally Regulated Adult"
 
 OUTPUT FORMAT (strict JSON only):
 {
   "score": 73,
   "signals": [
-    {"emoji": "⏸️", "title": "Micro-pause detected", "description": "Took way too long to answer"},
-    {"emoji": "📖", "title": "Story doing cardio", "description": "Simple question became a Netflix series"},
-    {"emoji": "🎭", "title": "Random detail drop", "description": "Mentioned unrelated stuff unprompted"}
+    {
+      "emoji": "⏸️",
+      "title": "Micro-pause detected",
+      "description": "Took way too long to answer a simple question",
+      "severity": "medium"
+    },
+    {
+      "emoji": "📖",
+      "title": "Story doing cardio",
+      "description": "Simple question became a Netflix series",
+      "severity": "high"
+    },
+    {
+      "emoji": "🎭",
+      "title": "Random detail drop",
+      "description": "Mentioned unrelated stuff unprompted - deflection tactic",
+      "severity": "medium"
+    }
   ],
   "verdict": {
-    "title": "Delulu Detected",
-    "body": "Oh… so we're just making things up now?\\n\\nMicro-pause. Over-explaining. Random details.\\n\\nBestie… this story has WiFi but no signal.\\n\\n📉 Final Call: Delulu Detected."
+    "title": "Major Cap Energy",
+    "body": "Oh… so we're just making things up now?\\n\\nMicro-pause. Over-explaining. Random details.\\n\\nBestie… this story has WiFi but no signal.\\n\\n🚩 Final Call: Major Cap Energy."
   }
 }
 
 CRITICAL RULES:
 - Return ONLY valid JSON, no other text
 - Always exactly 3 signals
+- Each signal MUST have: emoji, title, description, AND severity ("low", "medium", or "high")
+- Verdict title should match the score tier (use examples above)
 - Never use clinical/mental health terms
 - Don't say "lying" or "deception"
 - Keep it entertainment-framed
 - Be funny, not cruel
 - If messages seem distressed, dial back toxicity
+- Assign severity based on how much it could impact trust: low (minor), medium (noticeable), high (major red flag)
 
 Context adjustments:
 - dating: Spicier, relationship memes
@@ -86,7 +120,7 @@ export async function analyzeMessages(
     messages: [
       {
         role: 'user',
-        content: `Context: ${context}\n\nConversation:\n${conversationText}\n\nAnalyze and return ONLY JSON.`,
+        content: `Context: ${context}\n\nConversation:\n${conversationText}\n\nAnalyze and return ONLY JSON with severity levels for each signal.`,
       },
     ],
   });
@@ -108,6 +142,12 @@ export async function analyzeMessages(
     if (!analysis.score || !analysis.signals || !analysis.verdict) {
       throw new Error('Invalid structure');
     }
+
+    // Ensure all signals have severity (fallback to 'medium' if missing)
+    analysis.signals = analysis.signals.map(signal => ({
+      ...signal,
+      severity: signal.severity || 'medium'
+    }));
 
     return analysis;
   } catch (error) {

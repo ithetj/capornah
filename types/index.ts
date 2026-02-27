@@ -6,6 +6,7 @@ export interface Signal {
   emoji: string;
   title: string;
   description: string;
+  severity?: 'low' | 'medium' | 'high';
 }
 
 export interface Verdict {

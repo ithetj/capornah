@@ -6,6 +6,7 @@ import { GlassCard } from '@/components/ui/glass';
 import { Button } from '@/components/ui/button';
 import AuthModal from './AuthModal';
 import { createClient } from '@/lib/supabase/client';
+import { getCapTier, getPointsToNextTier } from '@/lib/capTiers';
 
 interface BlurredResultProps {
   score: number;
@@ -17,6 +18,9 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'onetime'>('onetime');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const tier = getCapTier(score);
+  const pointsToNext = getPointsToNextTier(score);
 
   useEffect(() => {
     async function checkAuth() {
@@ -67,7 +71,7 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0b0b14] to-black" />
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-pink-500/20 blur-3xl" />
+        <div className={`absolute -top-24 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-gradient-to-r ${tier.bgGradient} blur-3xl`} />
         <div className="absolute bottom-[-120px] right-[-120px] h-[520px] w-[520px] rounded-full bg-purple-500/20 blur-3xl" />
       </div>
 
@@ -79,17 +83,30 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
         {/* Preview Score */}
         <GlassCard className="p-8">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/80 mb-4">
-              🔒 Results are ready
+            {/* Tier Badge */}
+            <div className={`inline-flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r ${tier.color} px-5 py-2 text-sm font-bold text-white mb-4`}>
+              {tier.emoji} {tier.label}
             </div>
 
-            <div className="relative inline-block">
+            <div className="relative inline-block mb-4">
               <div className="text-7xl font-black mb-2">{score}</div>
               <div className="text-white/50 text-sm">/ 100</div>
             </div>
 
-            <p className="text-white/60 mt-4 text-lg">
-              Your scan is complete! Unlock to see the full verdict and patterns.
+            {/* Cap Scale Branding */}
+            <p className="text-gray-500 text-xs font-medium mb-3">
+              Cap Scale™ Rating
+            </p>
+
+            {/* Distance to Next Tier */}
+            {pointsToNext !== null && pointsToNext > 0 && (
+              <p className="text-white/60 text-sm mb-4">
+                <span className="text-orange-400 font-bold">{pointsToNext} points</span> away from next tier
+              </p>
+            )}
+
+            <p className="text-white/60 mt-2 text-lg">
+              🔒 Unlock to see the full breakdown and patterns
             </p>
           </div>
         </GlassCard>
@@ -132,7 +149,7 @@ export default function BlurredResult({ score, scanId }: BlurredResultProps) {
           <div className="text-center mb-6">
             {/* Psychological headline */}
             <h2 className="text-3xl font-black mb-3">
-              <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-pink-500">
                 You felt it. Now confirm it.
               </span>
             </h2>
