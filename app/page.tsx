@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { ScanForm } from '@/components/ScanForm';
-import { ScanAnimation } from '@/components/ScanAnimation';
+import ScanForm from '@/components/ScanForm';
+import ScanAnimation from '@/components/ScanAnimation';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   return (
-    <div className="relative min-h-screen overflow-hidden pt-20"> {/* Added pt-20 for nav */}
+    <div className="relative min-h-screen overflow-hidden pt-20">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0b0b14] to-black" />
       <div className="pointer-events-none absolute inset-0">
