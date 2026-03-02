@@ -1,12 +1,5 @@
 'use client';
 
-<button
-  onClick={() => router.push('/timeline')}
-  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg flex items-center gap-2"
->
-  📊 My Timeline
-</button>
-
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
