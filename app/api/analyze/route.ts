@@ -3,19 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { analyzeMessages } from '@/lib/claude';
 import { Context } from '@/types';
 import { getCapTier } from '@/lib/capTiers';
+import { LEVEL_THRESHOLDS } from '@/types/retention';
 
 // ============================================
 // HELPER FUNCTIONS FOR RETENTION
 // ============================================
-
-// Level thresholds for gamification
-const LEVEL_THRESHOLDS = [
-  { level: 1, name: 'Casual Analyzer', scans: 0 },
-  { level: 2, name: 'Pattern Aware', scans: 10 },
-  { level: 3, name: 'Emotional Strategist', scans: 30 },
-  { level: 4, name: 'Truth Architect', scans: 75 },
-  { level: 5, name: 'Relationship Master', scans: 150 },
-];
 
 // Calculate metrics from signals
 function calculateMetrics(signals: any[]) {
