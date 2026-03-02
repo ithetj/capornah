@@ -231,31 +231,38 @@ export default function ResultCard({ result }: ResultCardProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <button
-            onClick={() => window.location.href = '/'}
-            className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
-          >
-            🔍 Scan Again
-          </button>
-          
-          <button
-            onClick={handleDownloadImage}
-            disabled={downloading}
-            className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/50 disabled:opacity-50"
-          >
-            {downloading ? '⏳ Saving...' : '💾 Save'}
-          </button>
-          
-          {shareUrl && (
-            <button
-              onClick={handleShare}
-              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-pink-500/50"
-            >
-              📤 Share
-            </button>
-          )}
-        </div>
+<div className="grid grid-cols-4 gap-4 mb-8">
+  <button
+    onClick={() => window.location.href = '/'}
+    className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all border border-gray-700 hover:border-gray-600"
+  >
+    🔍 Scan Again
+  </button>
+  
+  <button
+    onClick={() => window.location.href = '/timeline'}
+    className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-purple-500/50"
+  >
+    📊 Timeline
+  </button>
+  
+  <button
+    onClick={handleDownloadImage}
+    disabled={downloading}
+    className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/50 disabled:opacity-50"
+  >
+    {downloading ? '⏳ Saving...' : '💾 Save'}
+  </button>
+  
+  {shareUrl && (
+    <button
+      onClick={handleShare}
+      className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-pink-500/50"
+    >
+      📤 Share
+    </button>
+  )}
+</div>
 
         {/* Watermark */}
         <div className="text-center mb-4">
