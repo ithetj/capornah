@@ -1,11 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ScanForm from '@/components/ScanForm';
 import ScanAnimation from '@/components/ScanAnimation';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const router = useRouter();
+
+  const handleScanComplete = (data: any) => {
+    setIsAnalyzing(false);
+    
+    // Redirect to result page based on locked status
+    if (data.scanId) {
+      if (data.locked) {
+        // Free users - go to paywall
+        window.location.href = `/result/${data.scanId}`;
+      } else {
+        // Pro users - go to unlocked results
+        window.location.href = `/result/${data.scanId}?unlocked=true`;
+      }
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden pt-20">
@@ -33,7 +50,10 @@ export default function Home() {
               </p>
             </div>
 
-            <ScanForm onLoading={setIsAnalyzing} />
+            <ScanForm 
+              onLoading={setIsAnalyzing}
+              onScanComplete={handleScanComplete}
+            />
 
             <div className="mt-8 text-center text-white/40 text-sm">
               🎭 Entertainment only. Not actual lie detection.
