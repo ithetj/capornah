@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen overflow-hidden pt-20">
-      {/* Background */}
+      {/* Background - same for both states */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0b0b14] to-black" />
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-pink-500/20 blur-3xl" />
@@ -50,10 +50,7 @@ export default function Home() {
               </p>
             </div>
 
-            <ScanForm 
-              onLoading={setIsAnalyzing}
-              onScanComplete={handleScanComplete}
-            />
+            <ScanForm onLoading={setIsAnalyzing} onScanComplete={handleScanComplete} />
 
             <div className="mt-8 text-center text-white/40 text-sm">
               🎭 Entertainment only. Not actual lie detection.
