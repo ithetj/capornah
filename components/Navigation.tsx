@@ -82,7 +82,7 @@ export default function Navigation() {
                   onClick={() => router.push('/timeline')}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg flex items-center gap-2 transition border border-white/20 hover:border-white/40 text-sm font-medium"
                 >
-                  📊 <span className="hidden sm:inline">Timeline</span>
+                  📊 <span className="hidden sm:inline">My Scans</span>
                 </button>
 
                 {/* Go Pro Button */}

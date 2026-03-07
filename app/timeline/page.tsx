@@ -1,36 +1,11 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { getCapTier } from '@/lib/capTiers';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 interface Analysis {
   id: string;
@@ -112,60 +87,10 @@ export default function TimelinePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading your timeline...</div>
+        <div className="text-white text-xl">Loading your scans...</div>
       </div>
     );
   }
-
-  // Prepare chart data
-  const chartData = {
-    labels: analyses.slice().reverse().map((a, i) => {
-      const date = new Date(a.created_at);
-      return `${date.getMonth() + 1}/${date.getDate()}`;
-    }),
-    datasets: [
-      {
-        label: 'Cap Score',
-        data: analyses.slice().reverse().map(a => a.score),
-        borderColor: 'rgb(236, 72, 153)',
-        backgroundColor: 'rgba(236, 72, 153, 0.1)',
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: 'Trust',
-        data: analyses.slice().reverse().map(a => a.metrics?.trust || 50),
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        fill: true,
-        tension: 0.4,
-      }
-    ]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        labels: {
-          color: 'white'
-        }
-      }
-    },
-    scales: {
-      x: {
-        ticks: { color: 'rgba(255,255,255,0.6)' },
-        grid: { color: 'rgba(255,255,255,0.1)' }
-      },
-      y: {
-        min: 0,
-        max: 100,
-        ticks: { color: 'rgba(255,255,255,0.6)' },
-        grid: { color: 'rgba(255,255,255,0.1)' }
-      }
-    }
-  };
 
   // Calculate trends
   const latestScore = analyses[0]?.score || 0;
@@ -185,10 +110,10 @@ export default function TimelinePage() {
             onClick={() => router.push('/')}
             className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
           >
-            ← Back to Scan
+            ← Back to Home
           </button>
           <h1 className="text-4xl font-black text-white mb-2">
-            📊 Relationship Timeline
+            📊 My Scans
           </h1>
           <p className="text-white/60">
             {relationship?.label || 'Your Relationship'} • {analyses.length} scans tracked
@@ -272,23 +197,7 @@ export default function TimelinePage() {
           </GlassCard>
         </div>
 
-        {/* Chart */}
-        {analyses.length >= 2 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <GlassCard className="p-6 mb-6">
-              <h2 className="text-xl font-bold text-white mb-4">Score Progression</h2>
-              <div className="h-64">
-                <Line data={chartData} options={chartOptions} />
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
-
-        {/* Timeline List */}
+        {/* Scan History */}
         <GlassCard className="p-6">
           <h2 className="text-xl font-bold text-white mb-4">Scan History</h2>
           
